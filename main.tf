@@ -97,19 +97,13 @@ resource "aws_elb" "web" {
   }
 }
 
-resource "aws_key_pair" "auth" {
-  key_name   = "${var.key_name}"
-  public_key = "${file(var.public_key_path)}"
-}
-
 resource "aws_instance" "web" {
   # The connection block tells our provisioner how to
   # communicate with the resource (instance)
   connection {
-    # The default username for our AMI
-    user = "ubuntu"
-
-    # The connection will use the local SSH agent for authentication.
+    type = "ssh"
+    user = "${var.ssh_user}"
+    private_key = "${file(var.private_key_path)}"
   }
 
   instance_type = "t2.micro"
@@ -118,8 +112,8 @@ resource "aws_instance" "web" {
   # we specified
   ami = "${lookup(var.aws_amis, var.aws_region)}"
 
-  # The name of our SSH keypair we created above.
-  key_name = "${aws_key_pair.auth.id}"
+  # The name of our SSH keypair.
+  key_name = "${file(var.key_name)}"
 
   # Our Security group to allow HTTP and SSH access
   vpc_security_group_ids = ["${aws_security_group.default.id}"]
